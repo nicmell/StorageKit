@@ -30,11 +30,11 @@ public:
     virtual int rawList(const QString &path, FileInfoList *out) = 0;
 };
 
-// Implemented once per platform (src/local/ vs src/android/). The pickers
-// are platform-independent (src/pickers.cpp).
+// Per-platform free functions (src/local/ vs src/android/) backing the
+// FileSystem statics; the pickers are platform-independent (src/pickers.cpp).
 std::shared_ptr<Backend> createBackend(const QUrl &root);
-int platformOpenUrl(const QUrl &url, int flags);
-FileInfo platformUrlInfo(const QUrl &url);
-void platformReleaseGrant(const QUrl &url);
+int openUrl(const QUrl &url, int flags);
+FileInfo urlInfo(const QUrl &url);
+void releaseGrant(const QUrl &url);
 
 } // namespace StorageKit

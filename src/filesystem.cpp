@@ -112,17 +112,17 @@ QUrl FileSystem::root() const
 
 int FileSystem::openUrl(const QUrl &url, int flags)
 {
-    return platformOpenUrl(url, flags);
+    return StorageKit::openUrl(url, flags); // qualified: the free function, not this method
 }
 
 FileInfo FileSystem::urlInfo(const QUrl &url)
 {
-    return platformUrlInfo(url);
+    return StorageKit::urlInfo(url);
 }
 
 void FileSystem::releaseGrant(const QUrl &url)
 {
-    platformReleaseGrant(url);
+    StorageKit::releaseGrant(url);
 }
 
 int FileSystem::open(const QString &path, int flags)

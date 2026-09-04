@@ -149,7 +149,7 @@ std::shared_ptr<Backend> createBackend(const QUrl &root)
     return std::make_shared<LocalBackend>(root);
 }
 
-int platformOpenUrl(const QUrl &url, int flags)
+int openUrl(const QUrl &url, int flags)
 {
     if (!url.isLocalFile()) {
         errno = EINVAL;
@@ -158,7 +158,7 @@ int platformOpenUrl(const QUrl &url, int flags)
     return ::open(url.toLocalFile().toLocal8Bit().constData(), flags, 0644);
 }
 
-FileInfo platformUrlInfo(const QUrl &url)
+FileInfo urlInfo(const QUrl &url)
 {
     // Accept file:// URLs and plain local paths.
     const QString path = url.isLocalFile() ? url.toLocalFile() : url.toString();
@@ -168,7 +168,7 @@ FileInfo platformUrlInfo(const QUrl &url)
     return makeInfo(qfi, qfi.absoluteFilePath());
 }
 
-void platformReleaseGrant(const QUrl &)
+void releaseGrant(const QUrl &)
 {
     // Desktop paths carry no revocable grant.
 }

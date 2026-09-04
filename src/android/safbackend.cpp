@@ -346,7 +346,7 @@ namespace StorageKit {
         return std::make_shared<SafBackend>(root);
     }
 
-    int platformOpenUrl(const QUrl &url, int flags) {
+    int openUrl(const QUrl &url, int flags) {
         QString mode;
         switch (flags & O_ACCMODE) {
             case O_RDONLY:
@@ -370,7 +370,7 @@ namespace StorageKit {
         return fd;
     }
 
-    FileInfo platformUrlInfo(const QUrl &url) {
+    FileInfo urlInfo(const QUrl &url) {
         if (url.scheme() != QLatin1String("content")) {
             // file:// URLs (app-private storage) still resolve locally.
             const QString path = url.isLocalFile() ? url.toLocalFile() : QString{};
@@ -403,7 +403,7 @@ namespace StorageKit {
         return makeInfo(rows.first(), url.toString());
     }
 
-    void platformReleaseGrant(const QUrl &url) {
+    void releaseGrant(const QUrl &url) {
         jni::releasePersistableUriPermission(jni::parseUri(url));
     }
 } // namespace StorageKit
