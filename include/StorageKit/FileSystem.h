@@ -62,6 +62,10 @@ public:
 
     // fd for a pickFile()/pickFiles() result (single-file grant, no tree).
     static int openUrl(const QUrl &url, int flags);
+    // Metadata for a granted URL outside any FileSystem instance: a document
+    // or tree content URL on Android, a local file URL (or plain path) on
+    // desktop. FileInfo::exists() is false when the URL cannot be resolved.
+    static FileInfo urlInfo(const QUrl &url);
     // Drop a persisted grant taken by pickFolder() (no-op on desktop).
     static void releaseGrant(const QUrl &url);
 

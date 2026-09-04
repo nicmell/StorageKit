@@ -255,6 +255,16 @@ int platformOpenUrl(const QUrl &url, int flags)
     return ::open(url.toLocalFile().toLocal8Bit().constData(), flags, 0644);
 }
 
+FileInfo platformUrlInfo(const QUrl &url)
+{
+    // Accept file:// URLs and plain local paths.
+    const QString path = url.isLocalFile() ? url.toLocalFile() : url.toString();
+    const QFileInfo qfi(path);
+    if (path.isEmpty() || !qfi.exists())
+        return {};
+    return makeInfo(qfi, qfi.absoluteFilePath());
+}
+
 void platformReleaseGrant(const QUrl &)
 {
     // Desktop paths carry no revocable grant.

@@ -7,6 +7,7 @@
 #include "fileinfo_p.h"
 #include "jniutils.h"
 
+#include <QFileInfo>
 #include <QJniEnvironment>
 #include <QMimeDatabase>
 #include <QMutex>
@@ -509,6 +510,40 @@ int platformOpenUrl(const QUrl &url, int flags)
     if (fd >= 0 && (flags & O_APPEND) && (flags & O_ACCMODE) == O_RDWR)
         ::lseek(fd, 0, SEEK_END);
     return fd;
+}
+
+FileInfo platformUrlInfo(const QUrl &url)
+{
+    if (url.scheme() != QLatin1String("content")) {
+        // file:// URLs (app-private storage) still resolve locally.
+        const QString path = url.isLocalFile() ? url.toLocalFile() : QString{};
+        if (path.isEmpty() || !QFileInfo::exists(path))
+            return {};
+        const QFileInfo qfi(path);
+        auto *data = new FileInfoData;
+        data->name = qfi.fileName();
+        data->filePath = qfi.absoluteFilePath();
+        data->size = qfi.isDir() ? 0 : qfi.size();
+        data->dir = qfi.isDir();
+        data->present = true;
+        data->mtime = qfi.lastModified();
+        data->readable = qfi.isReadable();
+        data->writable = qfi.isWritable();
+        return FileInfo(data);
+    }
+
+    QJniObject uri = jni::parseUri(url);
+    if (!jni::isDocumentUri(uri)) {
+        // Tree URL from the folder picker: address its root document.
+        const QString docId = jni::treeDocumentId(uri);
+        if (docId.isEmpty())
+            return {};
+        uri = jni::buildDocumentUriUsingTree(uri, docId);
+    }
+    const auto rows = queryUri(uri);
+    if (rows.isEmpty())
+        return {};
+    return makeInfo(rows.first(), url.toString());
 }
 
 void platformReleaseGrant(const QUrl &url)

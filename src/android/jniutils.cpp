@@ -46,6 +46,13 @@ QJniObject stringArray(const QStringList &list)
     return QJniObject::fromLocalRef(array);
 }
 
+bool isDocumentUri(const QJniObject &uri)
+{
+    return QJniObject::callStaticMethod<jboolean>(
+        "android/provider/DocumentsContract", "isDocumentUri",
+        "(Landroid/content/Context;Landroid/net/Uri;)Z", context().object(), uri.object());
+}
+
 QString treeDocumentId(const QJniObject &treeUri)
 {
     const auto id = QJniObject::callStaticObjectMethod(

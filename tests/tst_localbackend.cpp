@@ -198,6 +198,24 @@ private slots:
         QCOMPARE(m_fs->entryInfoList("", {}, QDir::Files | QDir::Hidden, QDir::Name).size(), 2);
     }
 
+    void urlInfo()
+    {
+        writeFile("a.txt", "hello");
+        const FileInfo fi = FileSystem::urlInfo(QUrl::fromLocalFile(m_dir->path() + "/a.txt"));
+        QVERIFY(fi.exists());
+        QVERIFY(fi.isFile());
+        QCOMPARE(fi.fileName(), QStringLiteral("a.txt"));
+        QCOMPARE(fi.size(), 5);
+        QCOMPARE(fi.mimeType(), QStringLiteral("text/plain"));
+
+        const FileInfo dirInfo = FileSystem::urlInfo(QUrl::fromLocalFile(m_dir->path()));
+        QVERIFY(dirInfo.exists());
+        QVERIFY(dirInfo.isDir());
+
+        QVERIFY(!FileSystem::urlInfo(QUrl::fromLocalFile("/nonexistent-storagekit")).exists());
+        QVERIFY(!FileSystem::urlInfo(QUrl()).exists());
+    }
+
     void openDeviceRoundtrip()
     {
         auto out = m_fs->openDevice("dev.txt", QIODevice::WriteOnly);

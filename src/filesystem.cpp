@@ -133,6 +133,11 @@ int FileSystem::openUrl(const QUrl &url, int flags)
     return platformOpenUrl(url, flags);
 }
 
+FileInfo FileSystem::urlInfo(const QUrl &url)
+{
+    return platformUrlInfo(url);
+}
+
 void FileSystem::releaseGrant(const QUrl &url)
 {
     platformReleaseGrant(url);

@@ -18,6 +18,7 @@ QJniObject contentResolver();
 QJniObject stringArray(const QStringList &list);
 
 // DocumentsContract statics
+bool isDocumentUri(const QJniObject &uri);
 QString treeDocumentId(const QJniObject &treeUri);
 QJniObject buildChildDocumentsUriUsingTree(const QJniObject &treeUri, const QString &parentDocId);
 QJniObject buildDocumentUriUsingTree(const QJniObject &treeUri, const QString &docId);

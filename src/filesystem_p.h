@@ -36,6 +36,7 @@ QFuture<FileSystem> platformPickFolder();
 QFuture<QUrl> platformPickFile(const QStringList &mimeTypes);
 QFuture<QList<QUrl>> platformPickFiles(const QStringList &mimeTypes);
 int platformOpenUrl(const QUrl &url, int flags);
+FileInfo platformUrlInfo(const QUrl &url);
 void platformReleaseGrant(const QUrl &url);
 
 } // namespace StorageKit
