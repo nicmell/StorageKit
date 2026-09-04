@@ -59,6 +59,10 @@ public:
     static QFuture<FileSystem> pickFolder();
     static QFuture<QUrl> pickFile(const QStringList &mimeTypes = {});
     static QFuture<QList<QUrl>> pickFiles(const QStringList &mimeTypes = {});
+    // "Save as" picker: the user chooses name and location, the document is
+    // created (ACTION_CREATE_DOCUMENT on Android) and its URL returned.
+    static QFuture<QUrl> pickSaveFile(const QString &suggestedName,
+                                      const QString &mimeType = {});
 
     // fd for a pickFile()/pickFiles() result (single-file grant, no tree).
     static int openUrl(const QUrl &url, int flags);

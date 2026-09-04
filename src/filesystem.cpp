@@ -128,6 +128,11 @@ QFuture<QList<QUrl>> FileSystem::pickFiles(const QStringList &mimeTypes)
     return platformPickFiles(mimeTypes);
 }
 
+QFuture<QUrl> FileSystem::pickSaveFile(const QString &suggestedName, const QString &mimeType)
+{
+    return platformPickSaveFile(suggestedName, mimeType);
+}
+
 int FileSystem::openUrl(const QUrl &url, int flags)
 {
     return platformOpenUrl(url, flags);

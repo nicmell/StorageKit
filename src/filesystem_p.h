@@ -35,6 +35,7 @@ std::shared_ptr<Backend> createBackend(const QUrl &root);
 QFuture<FileSystem> platformPickFolder();
 QFuture<QUrl> platformPickFile(const QStringList &mimeTypes);
 QFuture<QList<QUrl>> platformPickFiles(const QStringList &mimeTypes);
+QFuture<QUrl> platformPickSaveFile(const QString &suggestedName, const QString &mimeType);
 int platformOpenUrl(const QUrl &url, int flags);
 FileInfo platformUrlInfo(const QUrl &url);
 void platformReleaseGrant(const QUrl &url);

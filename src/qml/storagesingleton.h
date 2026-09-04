@@ -24,6 +24,7 @@ public:
     Q_INVOKABLE void pickFolder();
     Q_INVOKABLE void pickFile(const QStringList &mimeTypes = {});
     Q_INVOKABLE void pickFiles(const QStringList &mimeTypes = {});
+    Q_INVOKABLE void pickSaveFile(const QString &suggestedName, const QString &mimeType = {});
     Q_INVOKABLE StorageKit::QmlFileSystem *restore(const QUrl &root);
 
     // Small files only (fully buffered). Results arrive via fileRead/fileWritten.
@@ -34,6 +35,7 @@ signals:
     void folderPicked(StorageKit::QmlFileSystem *fileSystem);
     void filePicked(const QUrl &url);
     void filesPicked(const QList<QUrl> &urls);
+    void saveFilePicked(const QUrl &url);
     void pickCanceled();
     void fileRead(const QString &path, const QString &text, bool ok);
     void fileWritten(const QString &path, bool ok);

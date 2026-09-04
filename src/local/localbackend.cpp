@@ -216,6 +216,26 @@ QFuture<QList<QUrl>> platformPickFiles(const QStringList &mimeTypes)
     });
 }
 
+QFuture<QUrl> platformPickSaveFile(const QString &suggestedName, const QString &mimeType)
+{
+    return runOnGuiThread<QUrl>([suggestedName, mimeType] {
+        QFileDialog dialog;
+        dialog.setAcceptMode(QFileDialog::AcceptSave);
+        if (!mimeType.isEmpty())
+            dialog.setMimeTypeFilters({mimeType});
+        if (!suggestedName.isEmpty())
+            dialog.selectFile(suggestedName);
+        if (dialog.exec() != QDialog::Accepted || dialog.selectedUrls().isEmpty())
+            return QUrl{};
+        // Create the file so the URL behaves like ACTION_CREATE_DOCUMENT's.
+        const QUrl url = dialog.selectedUrls().first();
+        QFile file(url.toLocalFile());
+        if (!file.exists())
+            file.open(QIODevice::WriteOnly);
+        return url;
+    });
+}
+
 #else // no widget dialogs: pickers are unavailable on this build
 
 template <typename T>
@@ -242,6 +262,11 @@ QFuture<QUrl> platformPickFile(const QStringList &)
 QFuture<QList<QUrl>> platformPickFiles(const QStringList &)
 {
     return unsupportedFuture<QList<QUrl>>();
+}
+
+QFuture<QUrl> platformPickSaveFile(const QString &, const QString &)
+{
+    return unsupportedFuture<QUrl>();
 }
 
 #endif

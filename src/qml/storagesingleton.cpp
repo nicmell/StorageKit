@@ -43,6 +43,16 @@ void StorageSingleton::pickFiles(const QStringList &mimeTypes)
     });
 }
 
+void StorageSingleton::pickSaveFile(const QString &suggestedName, const QString &mimeType)
+{
+    FileSystem::pickSaveFile(suggestedName, mimeType).then(this, [this](const QUrl &url) {
+        if (url.isValid())
+            emit saveFilePicked(url);
+        else
+            emit pickCanceled();
+    });
+}
+
 QmlFileSystem *StorageSingleton::restore(const QUrl &root)
 {
     return new QmlFileSystem(FileSystem(root), this);

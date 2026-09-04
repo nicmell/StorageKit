@@ -369,11 +369,13 @@ private:
 
 // ---- pickers -----------------------------------------------------------
 
+const QLatin1String ACTION_CREATE_DOCUMENT("android.intent.action.CREATE_DOCUMENT");
 const QLatin1String ACTION_OPEN_DOCUMENT("android.intent.action.OPEN_DOCUMENT");
 const QLatin1String ACTION_OPEN_DOCUMENT_TREE("android.intent.action.OPEN_DOCUMENT_TREE");
 const QLatin1String CATEGORY_OPENABLE("android.intent.category.OPENABLE");
 const QLatin1String EXTRA_MIME_TYPES("android.intent.extra.MIME_TYPES");
 const QLatin1String EXTRA_ALLOW_MULTIPLE("android.intent.extra.ALLOW_MULTIPLE");
+const QLatin1String EXTRA_TITLE("android.intent.extra.TITLE");
 
 QJniObject makeIntent(const QString &action)
 {
@@ -450,6 +452,39 @@ QFuture<FileSystem> platformPickFolder()
                 }
             }
             promise->addResult(FileSystem(rootUrl));
+            promise->finish();
+        });
+    return future;
+}
+
+QFuture<QUrl> platformPickSaveFile(const QString &suggestedName, const QString &mimeType)
+{
+    auto intent = makeIntent(ACTION_CREATE_DOCUMENT);
+    intent.callObjectMethod("addCategory", "(Ljava/lang/String;)Landroid/content/Intent;",
+                            QJniObject::fromString(CATEGORY_OPENABLE).object());
+    intent.callObjectMethod("setType", "(Ljava/lang/String;)Landroid/content/Intent;",
+                            QJniObject::fromString(mimeType.isEmpty()
+                                                       ? QStringLiteral("application/octet-stream")
+                                                       : mimeType).object());
+    if (!suggestedName.isEmpty())
+        intent.callObjectMethod("putExtra", "(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;",
+                                QJniObject::fromString(EXTRA_TITLE).object(),
+                                QJniObject::fromString(suggestedName).object());
+
+    auto promise = std::make_shared<QPromise<QUrl>>();
+    QFuture<QUrl> future = promise->future();
+    promise->start();
+    QtAndroidPrivate::startActivity(
+        intent, nextRequestCode(), [promise](int, int resultCode, const QJniObject &data) {
+            QUrl result;
+            if (resultCode == ANDROID_RESULT_OK && data.isValid()) {
+                const auto uri = data.callObjectMethod("getData", "()Landroid/net/Uri;");
+                if (uri.isValid()) {
+                    jni::takePersistableUriPermission(uri);
+                    result = jni::toUrl(uri);
+                }
+            }
+            promise->addResult(result);
             promise->finish();
         });
     return future;
