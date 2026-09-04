@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 
-#include "qmlfilesystem.h"
+#include <StorageKit/FileSystem.h>
 
 #include <QAbstractListModel>
 #include <QQmlEngine>
@@ -18,7 +18,7 @@ class FolderModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(StorageKit::QmlFileSystem *fileSystem READ fileSystem WRITE setFileSystem NOTIFY fileSystemChanged)
+    Q_PROPERTY(StorageKit::FileSystem *fileSystem READ fileSystem WRITE setFileSystem NOTIFY fileSystemChanged)
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool canGoUp READ canGoUp NOTIFY pathChanged)
@@ -28,8 +28,8 @@ public:
 
     explicit FolderModel(QObject *parent = nullptr);
 
-    QmlFileSystem *fileSystem() const { return m_fileSystem; }
-    void setFileSystem(QmlFileSystem *fs);
+    FileSystem *fileSystem() const { return m_fileSystem; }
+    void setFileSystem(FileSystem *fs);
     QString path() const { return m_path; }
     void setPath(const QString &path);
     bool busy() const { return m_busy; }
@@ -61,7 +61,7 @@ private:
     bool validIndex(int index) const { return index >= 0 && index < m_entries.size(); }
     QString childPath(const QString &name) const;
 
-    QmlFileSystem *m_fileSystem = nullptr;
+    FileSystem *m_fileSystem = nullptr;
     QString m_path;
     FileInfoList m_entries;
     bool m_busy = false;

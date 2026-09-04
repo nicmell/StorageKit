@@ -94,8 +94,9 @@ void sortEntries(FileInfoList &list, QDir::SortFlags sort)
 } // namespace
 
 
-FileSystem::FileSystem(const QUrl &root)
-    : d(createBackend(root))
+FileSystem::FileSystem(const QUrl &root, QObject *parent)
+    : QObject(parent)
+    , d(createBackend(root))
 {
 }
 

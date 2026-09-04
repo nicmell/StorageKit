@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-#include "storagesingleton.h"
+#include "storage.h"
 
 #include <QtConcurrent>
 
@@ -8,12 +8,12 @@
 
 namespace StorageKit {
 
-StorageSingleton::StorageSingleton(QObject *parent)
+Storage::Storage(QObject *parent)
     : QObject(parent)
 {
 }
 
-void StorageSingleton::pickFolder()
+void Storage::pickFolder()
 {
     FileSystem::pickFolder().then(this, [this](const QUrl &url) {
         if (url.isValid())
@@ -23,7 +23,7 @@ void StorageSingleton::pickFolder()
     });
 }
 
-void StorageSingleton::pickFile(const QStringList &mimeTypes)
+void Storage::pickFile(const QStringList &mimeTypes)
 {
     FileSystem::pickFile(mimeTypes).then(this, [this](const QUrl &url) {
         if (url.isValid())
@@ -33,7 +33,7 @@ void StorageSingleton::pickFile(const QStringList &mimeTypes)
     });
 }
 
-void StorageSingleton::pickFiles(const QStringList &mimeTypes)
+void Storage::pickFiles(const QStringList &mimeTypes)
 {
     FileSystem::pickFiles(mimeTypes).then(this, [this](const QList<QUrl> &urls) {
         if (!urls.isEmpty())
@@ -43,7 +43,7 @@ void StorageSingleton::pickFiles(const QStringList &mimeTypes)
     });
 }
 
-void StorageSingleton::pickSaveFile(const QString &suggestedName, const QString &mimeType)
+void Storage::pickSaveFile(const QString &suggestedName, const QString &mimeType)
 {
     FileSystem::pickSaveFile(suggestedName, mimeType).then(this, [this](const QUrl &url) {
         if (url.isValid())
@@ -53,19 +53,20 @@ void StorageSingleton::pickSaveFile(const QString &suggestedName, const QString 
     });
 }
 
-QmlFileSystem *StorageSingleton::restore(const QUrl &root)
+FileSystem *Storage::restore(const QUrl &root)
 {
-    return new QmlFileSystem(FileSystem(root), this);
+    return new FileSystem(root, this);
 }
 
-void StorageSingleton::readAll(QmlFileSystem *fs, const QString &path)
+void Storage::readAll(FileSystem *fs, const QString &path)
 {
     if (!fs) {
         emit fileRead(path, {}, false);
         return;
     }
-    FileSystem fileSystem = fs->fileSystem();
-    auto future = QtConcurrent::run([fileSystem, path]() mutable {
+    const QUrl root = fs->root();
+    auto future = QtConcurrent::run([root, path] {
+        FileSystem fileSystem(root);
         QByteArray content;
         const int fd = fileSystem.open(path, O_RDONLY);
         if (fd < 0)
@@ -82,15 +83,16 @@ void StorageSingleton::readAll(QmlFileSystem *fs, const QString &path)
     });
 }
 
-void StorageSingleton::writeAll(QmlFileSystem *fs, const QString &path, const QString &text)
+void Storage::writeAll(FileSystem *fs, const QString &path, const QString &text)
 {
     if (!fs) {
         emit fileWritten(path, false);
         return;
     }
-    FileSystem fileSystem = fs->fileSystem();
+    const QUrl root = fs->root();
     const QByteArray content = text.toUtf8();
-    auto future = QtConcurrent::run([fileSystem, content, path]() mutable {
+    auto future = QtConcurrent::run([root, content, path] {
+        FileSystem fileSystem(root);
         const int fd = fileSystem.open(path, O_WRONLY | O_CREAT | O_TRUNC);
         if (fd < 0)
             return false;

@@ -15,7 +15,7 @@ FolderModel::FolderModel(QObject *parent)
 {
 }
 
-void FolderModel::setFileSystem(QmlFileSystem *fs)
+void FolderModel::setFileSystem(FileSystem *fs)
 {
     if (m_fileSystem == fs)
         return;
@@ -37,17 +37,18 @@ void FolderModel::setPath(const QString &path)
 
 void FolderModel::refresh()
 {
-    if (!m_fileSystem || !m_fileSystem->valid()) {
+    if (!m_fileSystem || !m_fileSystem->isValid()) {
         beginResetModel();
         m_entries.clear();
         endResetModel();
         return;
     }
     const quint64 generation = ++m_generation;
-    const FileSystem fs = m_fileSystem->fileSystem();
+    const QUrl root = m_fileSystem->root();
     const QString path = m_path;
     setBusy(true);
-    auto future = QtConcurrent::run([fs, path]() mutable {
+    auto future = QtConcurrent::run([root, path] {
+        FileSystem fs(root);
         return fs.entryInfoList(path, {}, QDir::NoFilter,
                                 QDir::Name | QDir::DirsFirst | QDir::IgnoreCase);
     });
@@ -121,11 +122,12 @@ void FolderModel::removeItem(int index)
 
 void FolderModel::runMutation(std::function<int(FileSystem &)> op)
 {
-    if (!m_fileSystem || !m_fileSystem->valid())
+    if (!m_fileSystem || !m_fileSystem->isValid())
         return;
-    FileSystem fs = m_fileSystem->fileSystem();
+    const QUrl root = m_fileSystem->root();
     setBusy(true);
-    auto future = QtConcurrent::run([fs, op = std::move(op)]() mutable {
+    auto future = QtConcurrent::run([root, op = std::move(op)] {
+        FileSystem fs(root);
         return op(fs) == 0 ? 0 : errno;
     });
     future.then(this, [this](int error) {

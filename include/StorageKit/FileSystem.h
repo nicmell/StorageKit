@@ -6,7 +6,9 @@
 #include <QDir>
 #include <QFuture>
 #include <QIODevice>
+#include <QObject>
 #include <QUrl>
+#include <QtQml/qqmlregistration.h>
 
 #include <memory>
 
@@ -34,20 +36,28 @@ struct Stat
  * a plain directory (file://) on desktop, a Storage Access Framework tree URI
  * (content://) on Android. Instances cannot reach outside their root.
  *
- * The constructor is synchronous and never shows UI; the pick*() factories are
- * the only entry points that do. Persist root() and rebuild with the
- * constructor to keep access across runs (the folder picker takes a
- * persistable URI permission on Android).
+ * The constructor is synchronous and never shows UI; the pick*() factories
+ * are the only entry points that do, and return granted URLs. Persist the
+ * root() url and rebuild with the constructor to keep access across runs
+ * (pickers take a persistable URI permission on Android).
  *
  * I/O follows the unix idiom: open() returns a real native file descriptor
  * (use read/write/lseek/fstat/close from libc), mutating calls return 0 or -1
  * with errno set. Listing follows the Qt idiom via entryInfoList().
  *
  * Blocking API — do not call from the GUI thread on Android (binder IPC).
+ * In QML, instances are obtained from Storage.restore(url).
  */
-class FileSystem
+class FileSystem : public QObject
 {
-public:explicit FileSystem(const QUrl &root);
+    Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("Obtained from Storage.restore(url)")
+    Q_PROPERTY(QUrl root READ root CONSTANT)
+    Q_PROPERTY(bool valid READ isValid CONSTANT)
+
+public:
+    explicit FileSystem(const QUrl &root, QObject *parent = nullptr);
 
     bool isValid() const; // root reachable and (Android) grant still held
     QUrl root() const;
@@ -68,7 +78,7 @@ public:explicit FileSystem(const QUrl &root);
     // or tree content URL on Android, a local file URL (or plain path) on
     // desktop. FileInfo::exists() is false when the URL cannot be resolved.
     static FileInfo urlInfo(const QUrl &url);
-    // Drop a persisted grant taken by pickFolder() (no-op on desktop).
+    // Drop a persisted grant taken by the pickers (no-op on desktop).
     static void releaseGrant(const QUrl &url);
 
     // Unix surface. Paths are relative to root(); absolute paths and ".."
