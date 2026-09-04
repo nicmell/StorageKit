@@ -24,7 +24,7 @@ qt_add_library(StorageKit STATIC
 )
 add_library(StorageKit::StorageKit ALIAS StorageKit)
 
-target_include_directories(StorageKit PUBLIC include PRIVATE src)
+target_include_directories(StorageKit PUBLIC include PRIVATE src src/qml)
 target_compile_features(StorageKit PUBLIC cxx_std_20)
 # Qml is public: the QML registration macros live in the public FileSystem.h.
 target_link_libraries(StorageKit PUBLIC Qt6::Core Qt6::Qml PRIVATE Qt6::Concurrent Qt6::Widgets)
@@ -44,10 +44,10 @@ qt_add_qml_module(StorageKit
     VERSION 1.0
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/StorageKit
     SOURCES
-        src/storage.h
-        src/storage.cpp
-        src/foldermodel.h
-        src/foldermodel.cpp
+        src/qml/storage.h
+        src/qml/storage.cpp
+        src/qml/foldermodel.h
+        src/qml/foldermodel.cpp
 )
 target_link_libraries(StorageKit PRIVATE Qt6::Qml)
 
