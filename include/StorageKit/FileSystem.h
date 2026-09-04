@@ -52,9 +52,9 @@ public:explicit FileSystem(const QUrl &root);
     bool isValid() const; // root reachable and (Android) grant still held
     QUrl root() const;
 
-    // Async pickers. A cancelled pick yields an invalid FileSystem / empty
-    // url / empty list respectively.
-    static QFuture<FileSystem> pickFolder();
+    // Async pickers. A cancelled pick yields an empty url / empty list.
+    // pickFolder grants a tree: construct a FileSystem from the returned url.
+    static QFuture<QUrl> pickFolder();
     static QFuture<QUrl> pickFile(const QStringList &mimeTypes = {});
     static QFuture<QList<QUrl>> pickFiles(const QStringList &mimeTypes = {});
     // "Save as" picker: the user chooses name and location, the document is

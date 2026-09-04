@@ -32,7 +32,7 @@ public:
     Q_INVOKABLE void writeAll(StorageKit::QmlFileSystem *fs, const QString &path, const QString &text);
 
 signals:
-    void folderPicked(StorageKit::QmlFileSystem *fileSystem);
+    void folderPicked(const QUrl &url);
     void filePicked(const QUrl &url);
     void filesPicked(const QList<QUrl> &urls);
     void saveFilePicked(const QUrl &url);

@@ -15,9 +15,9 @@ StorageSingleton::StorageSingleton(QObject *parent)
 
 void StorageSingleton::pickFolder()
 {
-    FileSystem::pickFolder().then(this, [this](const FileSystem &fs) {
-        if (fs.isValid())
-            emit folderPicked(new QmlFileSystem(fs, this));
+    FileSystem::pickFolder().then(this, [this](const QUrl &url) {
+        if (url.isValid())
+            emit folderPicked(url);
         else
             emit pickCanceled();
     });

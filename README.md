@@ -56,10 +56,11 @@ binder IPC.
 using namespace StorageKit;
 
 // First run: the user grants a folder (SAF tree picker / QFileDialog).
-FileSystem::pickFolder().then([](FileSystem fs) {
-    if (!fs.isValid())
+FileSystem::pickFolder().then([](QUrl root) {
+    if (root.isEmpty())
         return; // canceled
-    settings.setValue("root", fs.root()); // persist the grant
+    FileSystem fs(root);
+    settings.setValue("root", root); // persist the grant
 
     fs.mkdir("notes");
     int fd = fs.open("notes/todo.txt", O_WRONLY | O_CREAT | O_TRUNC);
@@ -89,7 +90,7 @@ Button { text: "Choose folder"; onClicked: Storage.pickFolder() }
 
 Connections {
     target: Storage
-    function onFolderPicked(fileSystem) { model.fileSystem = fileSystem }
+    function onFolderPicked(url) { model.fileSystem = Storage.restore(url) }
 }
 
 ListView {

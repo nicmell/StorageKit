@@ -63,12 +63,12 @@ QList<QUrl> pickExisting(const QStringList &mimeTypes, QFileDialog::FileMode fil
 
 } // namespace
 
-QFuture<FileSystem> FileSystem::pickFolder()
+QFuture<QUrl> FileSystem::pickFolder()
 {
-    return runOnGuiThread<FileSystem>([] {
+    return runOnGuiThread<QUrl>([] {
         const QUrl url = QFileDialog::getExistingDirectoryUrl();
         persistGrant(url);
-        return FileSystem(url);
+        return url;
     });
 }
 
