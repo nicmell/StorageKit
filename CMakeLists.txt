@@ -8,14 +8,10 @@ endif()
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Qml Concurrent)
-
-# Desktop pickers need QFileDialog (QtWidgets). Turn OFF for widget-free
-# builds; pickers then resolve to empty results.
-option(STORAGEKIT_WIDGET_DIALOGS "Use QFileDialog for pickers on desktop" ON)
-if(ANDROID)
-    set(STORAGEKIT_WIDGET_DIALOGS OFF)
-endif()
+# Pickers are QFileDialog-based on every platform (the QPA helper shows the
+# native dialog — the SAF pickers on Android), so Widgets is a hard
+# dependency and apps must run a QApplication.
+find_package(Qt6 REQUIRED COMPONENTS Core Qml Concurrent Widgets)
 
 qt_add_library(StorageKit STATIC
     include/StorageKit/FileInfo.h
@@ -24,29 +20,22 @@ qt_add_library(StorageKit STATIC
     src/fileinfo_p.h
     src/filesystem.cpp
     src/filesystem_p.h
+    src/pickers.cpp
 )
 add_library(StorageKit::StorageKit ALIAS StorageKit)
 
 target_include_directories(StorageKit PUBLIC include PRIVATE src src/qml)
 target_compile_features(StorageKit PUBLIC cxx_std_20)
-target_link_libraries(StorageKit PUBLIC Qt6::Core PRIVATE Qt6::Concurrent)
+target_link_libraries(StorageKit PUBLIC Qt6::Core PRIVATE Qt6::Concurrent Qt6::Widgets)
 
 if(ANDROID)
-    find_package(Qt6 REQUIRED COMPONENTS CorePrivate)
     target_sources(StorageKit PRIVATE
         src/android/jniutils.h
         src/android/jniutils.cpp
         src/android/safbackend.cpp
     )
-    target_link_libraries(StorageKit PRIVATE Qt6::CorePrivate)
 else()
     target_sources(StorageKit PRIVATE src/local/localbackend.cpp)
-    if(STORAGEKIT_WIDGET_DIALOGS)
-        find_package(Qt6 REQUIRED COMPONENTS Widgets)
-        target_link_libraries(StorageKit PRIVATE Qt6::Widgets)
-        # PUBLIC: the app checks this to choose QApplication over QGuiApplication.
-        target_compile_definitions(StorageKit PUBLIC STORAGEKIT_WIDGET_DIALOGS)
-    endif()
 endif()
 
 qt_add_qml_module(StorageKit

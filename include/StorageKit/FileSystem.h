@@ -47,9 +47,7 @@ struct Stat
  */
 class FileSystem
 {
-public:
-    FileSystem(); // invalid instance, same as FileSystem(QUrl{})
-    explicit FileSystem(const QUrl &root);
+public:explicit FileSystem(const QUrl &root);
 
     bool isValid() const; // root reachable and (Android) grant still held
     QUrl root() const;

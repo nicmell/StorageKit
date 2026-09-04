@@ -27,7 +27,6 @@ private slots:
     {
         QVERIFY(!FileSystem(QUrl::fromLocalFile("/nonexistent-storagekit")).isValid());
         QVERIFY(!FileSystem(QUrl()).isValid());
-        QVERIFY(!FileSystem().isValid());
     }
 
     void openWriteReadRoundtrip()

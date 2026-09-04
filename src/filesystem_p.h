@@ -30,12 +30,9 @@ public:
     virtual int rawList(const QString &path, FileInfoList *out) = 0;
 };
 
-// Implemented once per platform (src/local/ vs src/android/).
+// Implemented once per platform (src/local/ vs src/android/). The pickers
+// are platform-independent (src/pickers.cpp).
 std::shared_ptr<Backend> createBackend(const QUrl &root);
-QFuture<FileSystem> platformPickFolder();
-QFuture<QUrl> platformPickFile(const QStringList &mimeTypes);
-QFuture<QList<QUrl>> platformPickFiles(const QStringList &mimeTypes);
-QFuture<QUrl> platformPickSaveFile(const QString &suggestedName, const QString &mimeType);
 int platformOpenUrl(const QUrl &url, int flags);
 FileInfo platformUrlInfo(const QUrl &url);
 void platformReleaseGrant(const QUrl &url);

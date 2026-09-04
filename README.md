@@ -118,13 +118,12 @@ target_link_libraries(app PRIVATE StorageKit::StorageKit StorageKitplugin)
 Requirements: Qt 6.8+ (developed against 6.11), C++20. Android needs no
 manifest permissions — SAF works without any.
 
-Options:
-
-- `STORAGEKIT_WIDGET_DIALOGS` (default `ON` on desktop): desktop pickers use
-  `QFileDialog`, linking `Qt6::Widgets`; the app should then use
-  `QApplication` (the `STORAGEKIT_WIDGET_DIALOGS` compile definition is
-  exported for exactly that `#ifdef`). With the option `OFF`, pickers resolve
-  to empty results and the app must provide its own picker UI.
+The pickers are `QFileDialog`-based on every platform (Qt's QPA helper shows
+the native dialog — the SAF pickers on Android), so `Qt6::Widgets` is a hard
+dependency and applications must run a `QApplication` (not `QGuiApplication`).
+On Android, StorageKit takes a persistable URI permission on every picked
+content URL itself, so granted locations survive restarts by library contract
+regardless of the Qt version's helper behavior.
 
 ## Platform notes and limitations
 

@@ -3,15 +3,9 @@
 
 #include "fileinfo_p.h"
 
-#include <QCoreApplication>
 #include <QDirIterator>
 #include <QFileInfo>
 #include <QMimeDatabase>
-#include <QPromise>
-
-#ifdef STORAGEKIT_WIDGET_DIALOGS
-#include <QFileDialog>
-#endif
 
 #include <cerrno>
 #include <fcntl.h>
@@ -148,128 +142,12 @@ private:
     QString m_rootDir;
 };
 
-#ifdef STORAGEKIT_WIDGET_DIALOGS
-// QFileDialog must run on the GUI thread; hop there and settle the promise
-// from the dialog result.
-template <typename T, typename Fn>
-QFuture<T> runOnGuiThread(Fn dialogFn)
-{
-    auto promise = std::make_shared<QPromise<T>>();
-    QFuture<T> future = promise->future();
-    promise->start();
-    QMetaObject::invokeMethod(
-        QCoreApplication::instance(),
-        [promise, dialogFn]() {
-            promise->addResult(dialogFn());
-            promise->finish();
-        },
-        Qt::QueuedConnection);
-    return future;
-}
-
-QStringList mimeFilterList(const QStringList &mimeTypes)
-{
-    return mimeTypes.isEmpty() ? QStringList{QStringLiteral("application/octet-stream")} : mimeTypes;
-}
-#endif
-
 } // namespace
 
 std::shared_ptr<Backend> createBackend(const QUrl &root)
 {
     return std::make_shared<LocalBackend>(root);
 }
-
-#ifdef STORAGEKIT_WIDGET_DIALOGS
-
-QFuture<FileSystem> platformPickFolder()
-{
-    return runOnGuiThread<FileSystem>([] {
-        const QUrl url = QFileDialog::getExistingDirectoryUrl();
-        return FileSystem(url);
-    });
-}
-
-QFuture<QUrl> platformPickFile(const QStringList &mimeTypes)
-{
-    return runOnGuiThread<QUrl>([mimeTypes] {
-        QFileDialog dialog;
-        dialog.setFileMode(QFileDialog::ExistingFile);
-        if (!mimeTypes.isEmpty())
-            dialog.setMimeTypeFilters(mimeFilterList(mimeTypes));
-        if (dialog.exec() != QDialog::Accepted || dialog.selectedUrls().isEmpty())
-            return QUrl{};
-        return dialog.selectedUrls().first();
-    });
-}
-
-QFuture<QList<QUrl>> platformPickFiles(const QStringList &mimeTypes)
-{
-    return runOnGuiThread<QList<QUrl>>([mimeTypes] {
-        QFileDialog dialog;
-        dialog.setFileMode(QFileDialog::ExistingFiles);
-        if (!mimeTypes.isEmpty())
-            dialog.setMimeTypeFilters(mimeFilterList(mimeTypes));
-        if (dialog.exec() != QDialog::Accepted)
-            return QList<QUrl>{};
-        return dialog.selectedUrls();
-    });
-}
-
-QFuture<QUrl> platformPickSaveFile(const QString &suggestedName, const QString &mimeType)
-{
-    return runOnGuiThread<QUrl>([suggestedName, mimeType] {
-        QFileDialog dialog;
-        dialog.setAcceptMode(QFileDialog::AcceptSave);
-        if (!mimeType.isEmpty())
-            dialog.setMimeTypeFilters({mimeType});
-        if (!suggestedName.isEmpty())
-            dialog.selectFile(suggestedName);
-        if (dialog.exec() != QDialog::Accepted || dialog.selectedUrls().isEmpty())
-            return QUrl{};
-        // Create the file so the URL behaves like ACTION_CREATE_DOCUMENT's.
-        const QUrl url = dialog.selectedUrls().first();
-        QFile file(url.toLocalFile());
-        if (!file.exists())
-            file.open(QIODevice::WriteOnly);
-        return url;
-    });
-}
-
-#else // no widget dialogs: pickers are unavailable on this build
-
-template <typename T>
-static QFuture<T> unsupportedFuture()
-{
-    QPromise<T> promise;
-    QFuture<T> future = promise.future();
-    promise.start();
-    promise.addResult(T{});
-    promise.finish();
-    return future;
-}
-
-QFuture<FileSystem> platformPickFolder()
-{
-    return unsupportedFuture<FileSystem>();
-}
-
-QFuture<QUrl> platformPickFile(const QStringList &)
-{
-    return unsupportedFuture<QUrl>();
-}
-
-QFuture<QList<QUrl>> platformPickFiles(const QStringList &)
-{
-    return unsupportedFuture<QList<QUrl>>();
-}
-
-QFuture<QUrl> platformPickSaveFile(const QString &, const QString &)
-{
-    return unsupportedFuture<QUrl>();
-}
-
-#endif
 
 int platformOpenUrl(const QUrl &url, int flags)
 {

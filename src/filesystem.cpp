@@ -93,10 +93,6 @@ void sortEntries(FileInfoList &list, QDir::SortFlags sort)
 
 } // namespace
 
-FileSystem::FileSystem()
-    : FileSystem(QUrl{})
-{
-}
 
 FileSystem::FileSystem(const QUrl &root)
     : d(createBackend(root))
@@ -111,26 +107,6 @@ bool FileSystem::isValid() const
 QUrl FileSystem::root() const
 {
     return d ? d->root() : QUrl{};
-}
-
-QFuture<FileSystem> FileSystem::pickFolder()
-{
-    return platformPickFolder();
-}
-
-QFuture<QUrl> FileSystem::pickFile(const QStringList &mimeTypes)
-{
-    return platformPickFile(mimeTypes);
-}
-
-QFuture<QList<QUrl>> FileSystem::pickFiles(const QStringList &mimeTypes)
-{
-    return platformPickFiles(mimeTypes);
-}
-
-QFuture<QUrl> FileSystem::pickSaveFile(const QString &suggestedName, const QString &mimeType)
-{
-    return platformPickSaveFile(suggestedName, mimeType);
 }
 
 int FileSystem::openUrl(const QUrl &url, int flags)
