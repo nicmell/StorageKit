@@ -1,24 +1,25 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 
-#include <StorageKit/FileSystem.h>
+#include <StorageKit/Dir.h>
 
 #include <QAbstractListModel>
 #include <QQmlEngine>
+#include <QUrl>
 
 #include <functional>
 
 namespace StorageKit {
 
 /*!
- * List model over one directory of a FileSystem. Listing and mutations run
+ * List model over one directory of a granted root. Listing and mutations run
  * on a worker thread; the model resets back on the GUI thread when done.
  */
 class FolderModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(StorageKit::FileSystem *fileSystem READ fileSystem WRITE setFileSystem NOTIFY fileSystemChanged)
+    Q_PROPERTY(QUrl rootUrl READ rootUrl WRITE setRootUrl NOTIFY rootUrlChanged)
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool canGoUp READ canGoUp NOTIFY pathChanged)
@@ -28,8 +29,8 @@ public:
 
     explicit FolderModel(QObject *parent = nullptr);
 
-    FileSystem *fileSystem() const { return m_fileSystem; }
-    void setFileSystem(FileSystem *fs);
+    QUrl rootUrl() const { return m_rootUrl; }
+    void setRootUrl(const QUrl &rootUrl);
     QString path() const { return m_path; }
     void setPath(const QString &path);
     bool busy() const { return m_busy; }
@@ -50,18 +51,17 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
 signals:
-    void fileSystemChanged();
+    void rootUrlChanged();
     void pathChanged();
     void busyChanged();
     void errorOccurred(const QString &message);
 
 private:
     void setBusy(bool busy);
-    void runMutation(std::function<int(FileSystem &)> op);
+    void runMutation(const QString &description, std::function<bool(Dir &)> op);
     bool validIndex(int index) const { return index >= 0 && index < m_entries.size(); }
-    QString childPath(const QString &name) const;
 
-    FileSystem *m_fileSystem = nullptr;
+    QUrl m_rootUrl;
     QString m_path;
     FileInfoList m_entries;
     bool m_busy = false;

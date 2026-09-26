@@ -34,6 +34,7 @@ public:
     bool open(QIODevice::OpenMode mode) override;
     void close() override;
     qint64 size() const override; // open: from the stream; closed: from fileInfo()
+    bool seek(qint64 pos) override;
     bool isSequential() const override;
 
     bool exists() const;
@@ -48,7 +49,6 @@ public:
 protected:
     qint64 readData(char *data, qint64 maxSize) override;
     qint64 writeData(const char *data, qint64 maxSize) override;
-    bool seek(qint64 pos) override;
 
 private:
     class Private;

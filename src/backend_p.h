@@ -1,9 +1,25 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 
-#include <StorageKit/FileSystem.h>
+#include <StorageKit/FileInfo.h>
+
+#include <QUrl>
+
+#include <memory>
 
 namespace StorageKit {
+
+// stat() result used between the backends and the public classes.
+struct Stat
+{
+    enum Type { File, Dir };
+    Type type = File;
+    qint64 size = 0;
+    QDateTime mtime;
+    QString mime;
+    bool readable = false;
+    bool writable = false;
+};
 
 /*!
  * Backend contract. Paths arriving here are already validated and normalized
@@ -30,8 +46,8 @@ public:
     virtual int rawList(const QString &path, FileInfoList *out) = 0;
 };
 
-// Per-platform free functions (src/local/ vs src/android/) backing the
-// FileSystem statics; the pickers are platform-independent (src/pickers.cpp).
+// Per-platform free functions (src/local/ vs src/android/) backing File and
+// FileDialog; the dialogs themselves are platform-independent (src/filedialog.cpp).
 std::shared_ptr<Backend> createBackend(const QUrl &root);
 int openUrl(const QUrl &url, int flags);
 FileInfo urlInfo(const QUrl &url);

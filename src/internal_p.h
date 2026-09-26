@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 
-#include "filesystem_p.h"
+#include "backend_p.h"
 
+#include <QIODevice>
 #include <QRegularExpression>
 
 #include <fcntl.h>

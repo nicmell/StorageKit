@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 #include "storage.h"
 
-#include <QtConcurrent>
+#include <StorageKit/Dir.h>
+#include <StorageKit/File.h>
+#include <StorageKit/FileDialog.h>
 
-#include <fcntl.h>
-#include <unistd.h>
+#include <QtConcurrent>
 
 namespace StorageKit {
 
@@ -15,7 +16,7 @@ Storage::Storage(QObject *parent)
 
 void Storage::pickFolder()
 {
-    FileSystem::pickFolder().then(this, [this](const QUrl &url) {
+    FileDialog::getExistingDirectoryUrl().then(this, [this](const QUrl &url) {
         if (url.isValid())
             emit folderPicked(url);
         else
@@ -25,7 +26,7 @@ void Storage::pickFolder()
 
 void Storage::pickFile(const QStringList &mimeTypes)
 {
-    FileSystem::pickFile(mimeTypes).then(this, [this](const QUrl &url) {
+    FileDialog::getOpenFileUrl(mimeTypes).then(this, [this](const QUrl &url) {
         if (url.isValid())
             emit filePicked(url);
         else
@@ -35,7 +36,7 @@ void Storage::pickFile(const QStringList &mimeTypes)
 
 void Storage::pickFiles(const QStringList &mimeTypes)
 {
-    FileSystem::pickFiles(mimeTypes).then(this, [this](const QList<QUrl> &urls) {
+    FileDialog::getOpenFileUrls(mimeTypes).then(this, [this](const QList<QUrl> &urls) {
         if (!urls.isEmpty())
             emit filesPicked(urls);
         else
@@ -45,7 +46,7 @@ void Storage::pickFiles(const QStringList &mimeTypes)
 
 void Storage::pickSaveFile(const QString &suggestedName, const QString &mimeType)
 {
-    FileSystem::pickSaveFile(suggestedName, mimeType).then(this, [this](const QUrl &url) {
+    FileDialog::getSaveFileUrl(suggestedName, mimeType).then(this, [this](const QUrl &url) {
         if (url.isValid())
             emit saveFilePicked(url);
         else
@@ -53,60 +54,32 @@ void Storage::pickSaveFile(const QString &suggestedName, const QString &mimeType
     });
 }
 
-FileSystem *Storage::restore(const QUrl &root)
+bool Storage::isGrantValid(const QUrl &rootUrl) const
 {
-    return new FileSystem(root, this);
+    return rootUrl.isValid() && Dir(rootUrl).exists();
 }
 
-void Storage::readAll(FileSystem *fs, const QString &path)
+void Storage::readAll(const QUrl &rootUrl, const QString &path)
 {
-    if (!fs) {
-        emit fileRead(path, {}, false);
-        return;
-    }
-    const QUrl root = fs->root();
-    auto future = QtConcurrent::run([root, path] {
-        FileSystem fileSystem(root);
-        QByteArray content;
-        const int fd = fileSystem.open(path, O_RDONLY);
-        if (fd < 0)
-            return std::make_pair(false, content);
-        char buffer[16384];
-        ssize_t n;
-        while ((n = ::read(fd, buffer, sizeof(buffer))) > 0)
-            content.append(buffer, n);
-        ::close(fd);
-        return std::make_pair(n == 0, content);
+    auto future = QtConcurrent::run([rootUrl, path] {
+        File file(Dir(rootUrl), path);
+        if (!file.open(QIODevice::ReadOnly))
+            return std::make_pair(false, QByteArray{});
+        return std::make_pair(true, file.readAll());
     });
     future.then(this, [this, path](const std::pair<bool, QByteArray> &result) {
         emit fileRead(path, QString::fromUtf8(result.second), result.first);
     });
 }
 
-void Storage::writeAll(FileSystem *fs, const QString &path, const QString &text)
+void Storage::writeAll(const QUrl &rootUrl, const QString &path, const QString &text)
 {
-    if (!fs) {
-        emit fileWritten(path, false);
-        return;
-    }
-    const QUrl root = fs->root();
     const QByteArray content = text.toUtf8();
-    auto future = QtConcurrent::run([root, content, path] {
-        FileSystem fileSystem(root);
-        const int fd = fileSystem.open(path, O_WRONLY | O_CREAT | O_TRUNC);
-        if (fd < 0)
+    auto future = QtConcurrent::run([rootUrl, content, path] {
+        File file(Dir(rootUrl), path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
             return false;
-        qint64 written = 0;
-        while (written < content.size()) {
-            const ssize_t n = ::write(fd, content.constData() + written, content.size() - written);
-            if (n <= 0) {
-                ::close(fd);
-                return false;
-            }
-            written += n;
-        }
-        ::close(fd);
-        return true;
+        return file.write(content) == content.size();
     });
     future.then(this, [this, path](bool ok) { emit fileWritten(path, ok); });
 }

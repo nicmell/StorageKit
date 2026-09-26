@@ -1,27 +1,34 @@
 // SPDX-License-Identifier: MIT
 #include "foldermodel.h"
 
+#include <StorageKit/File.h>
+
 #include <QtConcurrent>
 
-#include <cerrno>
-#include <cstring>
-#include <fcntl.h>
-#include <unistd.h>
-
 namespace StorageKit {
+
+namespace {
+
+// Enters `path` from the root; false when a segment is missing.
+bool descend(Dir &dir, const QString &path)
+{
+    return path.isEmpty() || dir.cd(path);
+}
+
+} // namespace
 
 FolderModel::FolderModel(QObject *parent)
     : QAbstractListModel(parent)
 {
 }
 
-void FolderModel::setFileSystem(FileSystem *fs)
+void FolderModel::setRootUrl(const QUrl &rootUrl)
 {
-    if (m_fileSystem == fs)
+    if (m_rootUrl == rootUrl)
         return;
-    m_fileSystem = fs;
+    m_rootUrl = rootUrl;
     m_path.clear();
-    emit fileSystemChanged();
+    emit rootUrlChanged();
     emit pathChanged();
     refresh();
 }
@@ -37,20 +44,22 @@ void FolderModel::setPath(const QString &path)
 
 void FolderModel::refresh()
 {
-    if (!m_fileSystem || !m_fileSystem->isValid()) {
+    if (!m_rootUrl.isValid()) {
         beginResetModel();
         m_entries.clear();
         endResetModel();
         return;
     }
     const quint64 generation = ++m_generation;
-    const QUrl root = m_fileSystem->root();
+    const QUrl root = m_rootUrl;
     const QString path = m_path;
     setBusy(true);
     auto future = QtConcurrent::run([root, path] {
-        FileSystem fs(root);
-        return fs.entryInfoList(path, {}, QDir::NoFilter,
-                                QDir::Name | QDir::DirsFirst | QDir::IgnoreCase);
+        Dir dir(root);
+        if (!descend(dir, path))
+            return FileInfoList{};
+        return dir.entryInfoList({}, QDir::NoFilter,
+                                 QDir::Name | QDir::DirsFirst | QDir::IgnoreCase);
     });
     future.then(this, [this, generation](const FileInfoList &entries) {
         if (generation != m_generation)
@@ -86,60 +95,55 @@ bool FolderModel::itemIsDir(int index) const
 
 void FolderModel::newFile(const QString &name)
 {
-    const QString path = childPath(name);
-    runMutation([path](FileSystem &fs) {
-        const int fd = fs.open(path, O_WRONLY | O_CREAT | O_EXCL);
-        if (fd < 0)
-            return -1;
-        ::close(fd);
-        return 0;
+    runMutation(tr("create %1").arg(name), [name](Dir &dir) {
+        File file(dir, name);
+        if (file.exists())
+            return false;
+        return file.open(QIODevice::WriteOnly);
     });
 }
 
 void FolderModel::newFolder(const QString &name)
 {
-    const QString path = childPath(name);
-    runMutation([path](FileSystem &fs) { return fs.mkdir(path); });
+    runMutation(tr("create %1").arg(name), [name](Dir &dir) { return dir.mkdir(name); });
 }
 
 void FolderModel::renameItem(int index, const QString &newName)
 {
     if (!validIndex(index) || newName.isEmpty())
         return;
-    const QString from = m_entries[index].filePath();
-    const QString to = childPath(newName);
-    runMutation([from, to](FileSystem &fs) { return fs.rename(from, to); });
+    const QString name = m_entries[index].fileName();
+    runMutation(tr("rename %1").arg(name),
+                [name, newName](Dir &dir) { return dir.rename(name, newName); });
 }
 
 void FolderModel::removeItem(int index)
 {
     if (!validIndex(index))
         return;
-    const QString path = m_entries[index].filePath();
-    const bool dir = m_entries[index].isDir();
-    runMutation([path, dir](FileSystem &fs) { return dir ? fs.rmdir(path) : fs.unlink(path); });
+    const QString name = m_entries[index].fileName();
+    const bool isDir = m_entries[index].isDir();
+    runMutation(tr("remove %1").arg(name),
+                [name, isDir](Dir &dir) { return isDir ? dir.rmdir(name) : dir.remove(name); });
 }
 
-void FolderModel::runMutation(std::function<int(FileSystem &)> op)
+// Runs `op` against the model's current directory on a worker thread.
+void FolderModel::runMutation(const QString &description, std::function<bool(Dir &)> op)
 {
-    if (!m_fileSystem || !m_fileSystem->isValid())
+    if (!m_rootUrl.isValid())
         return;
-    const QUrl root = m_fileSystem->root();
+    const QUrl root = m_rootUrl;
+    const QString path = m_path;
     setBusy(true);
-    auto future = QtConcurrent::run([root, op = std::move(op)] {
-        FileSystem fs(root);
-        return op(fs) == 0 ? 0 : errno;
+    auto future = QtConcurrent::run([root, path, op = std::move(op)] {
+        Dir dir(root);
+        return descend(dir, path) && op(dir);
     });
-    future.then(this, [this](int error) {
-        if (error != 0)
-            emit errorOccurred(QString::fromLocal8Bit(std::strerror(error)));
+    future.then(this, [this, description](bool ok) {
+        if (!ok)
+            emit errorOccurred(tr("Operation failed: %1").arg(description));
         refresh();
     });
-}
-
-QString FolderModel::childPath(const QString &name) const
-{
-    return m_path.isEmpty() ? name : m_path + u'/' + name;
 }
 
 void FolderModel::setBusy(bool busy)

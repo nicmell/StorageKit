@@ -6,7 +6,7 @@
 // independent of what the platform helper does internally.
 #include <StorageKit/FileDialog.h>
 
-#include "filesystem_p.h"
+#include "backend_p.h"
 
 #include <QCoreApplication>
 #include <QFile>
@@ -118,10 +118,5 @@ void FileDialog::releaseGrant(const QUrl &url)
     StorageKit::releaseGrant(url);
 }
 
-// Legacy FileSystem statics: thin wrappers until FileSystem is removed.
-QFuture<QUrl> FileSystem::pickFolder() { return FileDialog::getExistingDirectoryUrl(); }
-QFuture<QUrl> FileSystem::pickFile(const QStringList &m) { return FileDialog::getOpenFileUrl(m); }
-QFuture<QList<QUrl>> FileSystem::pickFiles(const QStringList &m) { return FileDialog::getOpenFileUrls(m); }
-QFuture<QUrl> FileSystem::pickSaveFile(const QString &n, const QString &m) { return FileDialog::getSaveFileUrl(n, m); }
 
 } // namespace StorageKit

@@ -18,22 +18,19 @@ qt_add_library(StorageKit STATIC
     include/StorageKit/File.h
     include/StorageKit/FileDialog.h
     include/StorageKit/FileInfo.h
-    include/StorageKit/FileSystem.h
+    src/backend_p.h
     src/dir.cpp
     src/file.cpp
     src/filedialog.cpp
     src/fileinfo.cpp
     src/fileinfo_p.h
-    src/filesystem.cpp
-    src/filesystem_p.h
     src/internal_p.h
 )
 add_library(StorageKit::StorageKit ALIAS StorageKit)
 
 target_include_directories(StorageKit PUBLIC include PRIVATE src src/qml)
 target_compile_features(StorageKit PUBLIC cxx_std_20)
-# Qml is public: the QML registration macros live in the public FileSystem.h.
-target_link_libraries(StorageKit PUBLIC Qt6::Core Qt6::Qml PRIVATE Qt6::Concurrent Qt6::Widgets)
+target_link_libraries(StorageKit PUBLIC Qt6::Core PRIVATE Qt6::Qml Qt6::Concurrent Qt6::Widgets)
 
 if(ANDROID)
     target_sources(StorageKit PRIVATE
