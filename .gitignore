@@ -1,0 +1,6 @@
+build*/
+cmake-build-*/
+.idea/
+.qtcreator/
+CMakeLists.txt.user*
+.DS_Store

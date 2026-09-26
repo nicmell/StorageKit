@@ -4,7 +4,15 @@ cmake_minimum_required(VERSION 3.21)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     project(StorageKit VERSION 0.1 LANGUAGES CXX)
+    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    include(CTest)
 endif()
+
+# Example app: on by default only when StorageKit is the top-level project,
+# so consumers pulling the library in as a submodule don't build it.
+option(STORAGEKIT_BUILD_EXAMPLE "Build the StorageKit example app"
+       ${PROJECT_IS_TOP_LEVEL})
 
 set(CMAKE_AUTOMOC ON)
 
@@ -12,6 +20,10 @@ set(CMAKE_AUTOMOC ON)
 # native dialog — the SAF pickers on Android), so Widgets is a hard
 # dependency and apps must run a QApplication.
 find_package(Qt6 REQUIRED COMPONENTS Core Qml Concurrent Widgets)
+
+if(PROJECT_IS_TOP_LEVEL)
+    qt_standard_project_setup(REQUIRES 6.8)
+endif()
 
 qt_add_library(StorageKit STATIC
     include/StorageKit/Dir.h
@@ -56,4 +68,8 @@ target_link_libraries(StorageKit PRIVATE Qt6::Qml)
 
 if(NOT ANDROID AND BUILD_TESTING)
     add_subdirectory(tests)
+endif()
+
+if(STORAGEKIT_BUILD_EXAMPLE)
+    add_subdirectory(example)
 endif()

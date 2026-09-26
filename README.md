@@ -98,6 +98,30 @@ ListView {
   `renameItem`, `removeItem`, `busy`, `errorOccurred`. All storage work runs
   on a worker thread.
 
+## Example app
+
+`example/` contains a small file browser/editor exercising the whole API:
+grant a folder, browse it, create files through the save picker, delete,
+edit text files in place; the granted root is persisted and restored on the
+next launch. Built by default when StorageKit is the top-level project:
+
+```sh
+cmake -DCMAKE_PREFIX_PATH=/path/to/Qt/macos -DCMAKE_BUILD_TYPE=Debug -B build -S .
+cmake --build build -j
+ctest --test-dir build                    # unit tests
+./build/example/appStorageKitExample.app/Contents/MacOS/appStorageKitExample   # macOS
+```
+
+Android:
+
+```sh
+/path/to/Qt/android_arm64_v8a/bin/qt-cmake \
+    -DANDROID_SDK_ROOT=$HOME/Library/Android/sdk \
+    -DANDROID_NDK_ROOT=$HOME/Library/Android/sdk/ndk/<version> \
+    -B build-android -S .
+cmake --build build-android --target apk
+```
+
 ## Integration
 
 Self-contained CMake target, usable via `add_subdirectory`, git submodule or
