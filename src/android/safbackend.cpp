@@ -403,6 +403,14 @@ namespace StorageKit {
         return makeInfo(rows.first(), url.toString());
     }
 
+    bool removeUrl(const QUrl &url) {
+        return jni::deleteDocument(jni::parseUri(url));
+    }
+
+    QUrl renameUrl(const QUrl &url, const QString &newName) {
+        return jni::toUrl(jni::renameDocument(jni::parseUri(url), newName));
+    }
+
     void releaseGrant(const QUrl &url) {
         jni::releasePersistableUriPermission(jni::parseUri(url));
     }

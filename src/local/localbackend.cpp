@@ -4,6 +4,7 @@
 #include "fileinfo_p.h"
 
 #include <QDirIterator>
+#include <QFile>
 #include <QFileInfo>
 #include <QMimeDatabase>
 
@@ -166,6 +167,20 @@ FileInfo urlInfo(const QUrl &url)
     if (path.isEmpty() || !qfi.exists())
         return {};
     return makeInfo(qfi, qfi.absoluteFilePath());
+}
+
+bool removeUrl(const QUrl &url)
+{
+    return url.isLocalFile() && QFile::remove(url.toLocalFile());
+}
+
+QUrl renameUrl(const QUrl &url, const QString &newName)
+{
+    if (!url.isLocalFile())
+        return {};
+    const QFileInfo qfi(url.toLocalFile());
+    const QString newPath = qfi.absolutePath() + u'/' + newName;
+    return QFile::rename(qfi.absoluteFilePath(), newPath) ? QUrl::fromLocalFile(newPath) : QUrl{};
 }
 
 void releaseGrant(const QUrl &)

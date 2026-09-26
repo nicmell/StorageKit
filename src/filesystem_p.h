@@ -35,6 +35,9 @@ public:
 std::shared_ptr<Backend> createBackend(const QUrl &root);
 int openUrl(const QUrl &url, int flags);
 FileInfo urlInfo(const QUrl &url);
+bool removeUrl(const QUrl &url);
+// Renamed document's new url; empty on failure.
+QUrl renameUrl(const QUrl &url, const QString &newName);
 void releaseGrant(const QUrl &url);
 
 } // namespace StorageKit

@@ -4,6 +4,8 @@
 // persistable permission is additionally taken on each resulting content URI
 // ourselves, so granted locations survive app restarts by library contract,
 // independent of what the platform helper does internally.
+#include <StorageKit/FileDialog.h>
+
 #include "filesystem_p.h"
 
 #include <QCoreApplication>
@@ -63,7 +65,7 @@ QList<QUrl> pickExisting(const QStringList &mimeTypes, QFileDialog::FileMode fil
 
 } // namespace
 
-QFuture<QUrl> FileSystem::pickFolder()
+QFuture<QUrl> FileDialog::getExistingDirectoryUrl()
 {
     return runOnGuiThread<QUrl>([] {
         const QUrl url = QFileDialog::getExistingDirectoryUrl();
@@ -72,7 +74,7 @@ QFuture<QUrl> FileSystem::pickFolder()
     });
 }
 
-QFuture<QUrl> FileSystem::pickFile(const QStringList &mimeTypes)
+QFuture<QUrl> FileDialog::getOpenFileUrl(const QStringList &mimeTypes)
 {
     return runOnGuiThread<QUrl>([mimeTypes] {
         const QList<QUrl> urls = pickExisting(mimeTypes, QFileDialog::ExistingFile);
@@ -80,14 +82,14 @@ QFuture<QUrl> FileSystem::pickFile(const QStringList &mimeTypes)
     });
 }
 
-QFuture<QList<QUrl>> FileSystem::pickFiles(const QStringList &mimeTypes)
+QFuture<QList<QUrl>> FileDialog::getOpenFileUrls(const QStringList &mimeTypes)
 {
     return runOnGuiThread<QList<QUrl>>([mimeTypes] {
         return pickExisting(mimeTypes, QFileDialog::ExistingFiles);
     });
 }
 
-QFuture<QUrl> FileSystem::pickSaveFile(const QString &suggestedName, const QString &mimeType)
+QFuture<QUrl> FileDialog::getSaveFileUrl(const QString &suggestedName, const QString &mimeType)
 {
     return runOnGuiThread<QUrl>([suggestedName, mimeType] {
         QFileDialog dialog;
@@ -110,5 +112,16 @@ QFuture<QUrl> FileSystem::pickSaveFile(const QString &suggestedName, const QStri
         return url;
     });
 }
+
+void FileDialog::releaseGrant(const QUrl &url)
+{
+    StorageKit::releaseGrant(url);
+}
+
+// Legacy FileSystem statics: thin wrappers until FileSystem is removed.
+QFuture<QUrl> FileSystem::pickFolder() { return FileDialog::getExistingDirectoryUrl(); }
+QFuture<QUrl> FileSystem::pickFile(const QStringList &m) { return FileDialog::getOpenFileUrl(m); }
+QFuture<QList<QUrl>> FileSystem::pickFiles(const QStringList &m) { return FileDialog::getOpenFileUrls(m); }
+QFuture<QUrl> FileSystem::pickSaveFile(const QString &n, const QString &m) { return FileDialog::getSaveFileUrl(n, m); }
 
 } // namespace StorageKit

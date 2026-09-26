@@ -15,15 +15,18 @@ find_package(Qt6 REQUIRED COMPONENTS Core Qml Concurrent Widgets)
 
 qt_add_library(StorageKit STATIC
     include/StorageKit/Dir.h
+    include/StorageKit/File.h
+    include/StorageKit/FileDialog.h
     include/StorageKit/FileInfo.h
     include/StorageKit/FileSystem.h
     src/dir.cpp
+    src/file.cpp
+    src/filedialog.cpp
     src/fileinfo.cpp
     src/fileinfo_p.h
     src/filesystem.cpp
     src/filesystem_p.h
     src/internal_p.h
-    src/pickers.cpp
 )
 add_library(StorageKit::StorageKit ALIAS StorageKit)
 
