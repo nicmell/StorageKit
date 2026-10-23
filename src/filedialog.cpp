@@ -105,8 +105,8 @@ QFuture<QUrl> FileDialog::getSaveFileUrl(const QString &suggestedName, const QSt
         // ACTION_CREATE_DOCUMENT creates the document; match that on desktop
         // so the returned URL always points at an existing file.
         QFile file(url.toLocalFile());
-        if (!file.exists())
-            file.open(QIODevice::WriteOnly);
+        if (!file.exists() && !file.open(QIODevice::WriteOnly))
+            return QUrl{};
 #endif
         persistGrant(url);
         return url;
