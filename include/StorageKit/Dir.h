@@ -55,7 +55,7 @@ public:
 
 private:
     friend class File;
-    QString filePath(const QString &name) const; // validated absolute-relative path
+    QString filePath(const QString &name) const;
 
     std::shared_ptr<Backend> d;
     QString m_path;

@@ -59,7 +59,7 @@ bool Dir::cd(const QString &dirName)
 bool Dir::cdUp()
 {
     if (m_path.isEmpty())
-        return false; // the granted root is the ceiling
+        return false;
     const int slash = m_path.lastIndexOf(u'/');
     m_path = slash < 0 ? QString{} : m_path.left(slash);
     return true;

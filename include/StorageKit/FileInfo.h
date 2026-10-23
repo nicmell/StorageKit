@@ -11,8 +11,8 @@ namespace StorageKit {
 class FileInfoData;
 
 /*!
- * Metadata for one entry inside a FileSystem, mirroring a subset of QFileInfo
- * plus mimeType(). Instances are produced by FileSystem::entryInfoList() and
+ * Metadata for one entry inside a Dir, mirroring a subset of QFileInfo plus
+ * mimeType(). Instances are produced by Dir::entryInfoList() and
  * filled from a single batched query per directory.
  */
 class FileInfo
@@ -24,7 +24,7 @@ public:
     ~FileInfo();
 
     QString fileName() const;
-    QString filePath() const; // relative to the owning FileSystem root
+    QString filePath() const; // relative to the owning Dir's root
     qint64 size() const;
     bool isDir() const;
     bool isFile() const;

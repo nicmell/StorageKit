@@ -63,7 +63,7 @@ void FolderModel::refresh()
     });
     future.then(this, [this, generation](const FileInfoList &entries) {
         if (generation != m_generation)
-            return; // a newer refresh superseded this one
+            return;
         beginResetModel();
         m_entries = entries;
         endResetModel();

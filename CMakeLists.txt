@@ -1,24 +1,18 @@
-# StorageKit — shared-storage filesystem library for desktop and Android.
-# Self-contained: usable via add_subdirectory, git submodule or FetchContent.
 cmake_minimum_required(VERSION 3.21)
 
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    project(StorageKit VERSION 0.1 LANGUAGES CXX)
+project(StorageKit VERSION 0.1 LANGUAGES CXX)
+
+if(PROJECT_IS_TOP_LEVEL)
     set(CMAKE_CXX_STANDARD 20)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     include(CTest)
 endif()
 
-# Example app: on by default only when StorageKit is the top-level project,
-# so consumers pulling the library in as a submodule don't build it.
 option(STORAGEKIT_BUILD_EXAMPLE "Build the StorageKit example app"
        ${PROJECT_IS_TOP_LEVEL})
 
 set(CMAKE_AUTOMOC ON)
 
-# Pickers are QFileDialog-based on every platform (the QPA helper shows the
-# native dialog — the SAF pickers on Android), so Widgets is a hard
-# dependency and apps must run a QApplication.
 find_package(Qt6 REQUIRED COMPONENTS Core Qml Concurrent Widgets)
 
 if(PROJECT_IS_TOP_LEVEL)
