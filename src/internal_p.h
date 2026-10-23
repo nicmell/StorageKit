@@ -15,8 +15,8 @@
 namespace StorageKit {
 namespace internal {
 
-// "" refers to the current/root directory. Rejects absolute paths, "..",
-// "." and empty segments — the capability guarantee.
+// "" refers to the current/root directory. Rejects absolute paths, "..", "."
+// and empty segments, and backslashes — the capability guarantee.
 inline bool cleanPath(const QString &path, QString *out)
 {
     if (path.isEmpty()) {
