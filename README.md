@@ -132,7 +132,7 @@ add_subdirectory(libs/storagekit)
 target_link_libraries(app PRIVATE StorageKit::StorageKit StorageKitplugin)
 ```
 
-Requirements: Qt 6.8+ (developed against 6.11), C++20. Android needs no
+Requirements: Qt 6.8+ (developed against 6.12), C++20. Android needs no
 manifest permissions — SAF works without any. The pickers are
 `QFileDialog`-based on every platform (Qt's QPA helper shows the native
 dialog), so `Qt6::Widgets` is required and applications must run a
