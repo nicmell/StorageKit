@@ -1,9 +1,4 @@
 // SPDX-License-Identifier: MIT
-// One QFileDialog-based picker implementation for every platform: Qt's QPA
-// helper shows the native dialog (the SAF pickers on Android). On Android a
-// persistable permission is additionally taken on each resulting content URI
-// ourselves, so granted locations survive app restarts by library contract,
-// independent of what the platform helper does internally.
 #include <StorageKit/FileDialog.h>
 
 #include "backend_p.h"
@@ -31,8 +26,6 @@ void persistGrant(const QUrl &url)
 #endif
 }
 
-// Dialogs must run on the GUI thread; hop there and settle the promise from
-// the dialog result.
 template <typename T, typename Fn>
 QFuture<T> runOnGuiThread(Fn dialogFn)
 {
@@ -102,8 +95,6 @@ QFuture<QUrl> FileDialog::getSaveFileUrl(const QString &suggestedName, const QSt
             return QUrl{};
         const QUrl url = dialog.selectedUrls().first();
 #ifndef Q_OS_ANDROID
-        // ACTION_CREATE_DOCUMENT creates the document; match that on desktop
-        // so the returned URL always points at an existing file.
         QFile file(url.toLocalFile());
         if (!file.exists() && !file.open(QIODevice::WriteOnly))
             return QUrl{};

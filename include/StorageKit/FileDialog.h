@@ -8,8 +8,7 @@
 namespace StorageKit {
 
 /*!
- * Pickers mirroring QFileDialog's static getters, asynchronous because
- * Android's SAF pickers are (results come back via activity results).
+ * Asynchronous pickers mirroring QFileDialog's static getters.
  * Qt's platform helper shows the native dialog on every platform; on Android
  * a persistable URI permission is taken on each result, so granted locations
  * survive app restarts — build a Dir from getExistingDirectoryUrl()'s result,

@@ -161,7 +161,6 @@ int openUrl(const QUrl &url, int flags)
 
 FileInfo urlInfo(const QUrl &url)
 {
-    // Accept file:// URLs and plain local paths.
     const QString path = url.isLocalFile() ? url.toLocalFile() : url.toString();
     const QFileInfo qfi(path);
     if (path.isEmpty() || !qfi.exists())
